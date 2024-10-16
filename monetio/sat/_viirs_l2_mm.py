@@ -19,25 +19,16 @@ def read_dataset(fname, variable_dict):
     -------
     xarray.Dataset
     """
-    from monetio.sat.hdfio import hdf_close, hdf_list, hdf_open, hdf_read
-
-    epoch_1993 = int(datetime(1993, 1, 1, tzinfo=timezone.utc).timestamp())
-
     print("reading " + fname)
 
-    ds = xr.Dataset()
+    ds_subset = xr.Dataset()
 
-    f = hdf_open(fname)
-    hdf_list(f)
-    # Geolocation and Time Parameters
-    latitude = hdf_read(f, "Latitude")
-    longitude = hdf_read(f, "Longitude")
-    # convert seconds since 1993 to since 1970
-    start_time = hdf_read(f, "Scan_Start_Time") + epoch_1993
+    ds = xr.open_dataset(fname)
+    print(ds)
+
     for varname in variable_dict:
         print(varname)
-        values = hdf_read(f, varname)
-        print("min, max: ", values.min(), " ", values.max())
+        values = ds[varname].values
         if "scale" in variable_dict[varname]:
             values = variable_dict[varname]["scale"] * values
         if "minimum" in variable_dict[varname]:
@@ -50,18 +41,8 @@ def read_dataset(fname, variable_dict):
         if "quality_flag" in variable_dict[varname]:
             ds.attrs["quality_flag"] = varname
             ds.attrs["quality_thresh"] = variable_dict[varname]["quality_flag"]
-    hdf_close(f)
 
-    ds = ds.assign_coords(
-        {
-            "lon": (["dim_0", "dim_1"], longitude),
-            "lat": (["dim_0", "dim_1"], latitude),
-            "time": (["dim_0", "dim_1"], start_time),
-        }
-    )
-    ds = ds.rename_dims({"dim_0": "Cell_Along_Swath", "dim_1": "Cell_Across_Swath"})
-
-    return ds
+    return ds_subset
 
 
 def apply_quality_flag(ds):
