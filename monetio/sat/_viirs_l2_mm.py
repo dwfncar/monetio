@@ -24,7 +24,7 @@ def read_dataset(fname, variable_dict):
     ds_subset = xr.Dataset()
 
     ds = xr.open_dataset(fname)
-    print(ds)
+    # print(ds)
 
     for varname in variable_dict:
         print(varname)
@@ -37,10 +37,10 @@ def read_dataset(fname, variable_dict):
         if "maximum" in variable_dict[varname]:
             maximum = variable_dict[varname]["maximum"]
             values[values > maximum] = np.nan
-        ds[varname] = xr.DataArray(values)
+        ds_subset[varname] = xr.DataArray(values)
         if "quality_flag" in variable_dict[varname]:
-            ds.attrs["quality_flag"] = varname
-            ds.attrs["quality_thresh"] = variable_dict[varname]["quality_flag"]
+            ds_subset.attrs["quality_flag"] = varname
+            ds_subset.attrs["quality_thresh"] = variable_dict[varname]["quality_flag"]
 
     return ds_subset
 
